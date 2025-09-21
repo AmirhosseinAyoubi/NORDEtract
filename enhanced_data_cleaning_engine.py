@@ -210,8 +210,8 @@ class EnhancedDataCleaningEngine:
             },
             "transformations": self.transformations_applied,
             "quality_improvement": {
-                "original_score": quality_report.get('credibility', {}).get('score', 0),
-                "cleaned_score": min(100, quality_report.get('credibility', {}).get('score', 0) + 15),
+                "original_score": quality_report.get('quality_score', 0),
+                "cleaned_score": min(100, quality_report.get('quality_score', 0) + 15),
                 "estimated_improvement": "Significant improvement expected due to outlier treatment, missing value imputation, and data type optimization"
             },
             "recommendations": [

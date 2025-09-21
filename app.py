@@ -14,6 +14,7 @@ import matplotlib.pyplot as plt
 import re
 import time
 from typing import Dict, Any, List, Tuple, Optional
+from data_monitor import monitor_file_upload, get_monitoring_report, get_monitoring_summary
 try:
     from enhanced_data_cleaning_engine import EnhancedDataCleaningEngine
 except Exception:
@@ -161,6 +162,15 @@ def upload_file():
             'quality_report': report
         }
         response_data = clean_nan_values(response_data)
+        try:
+            monitoring_result = monitor_file_upload(temp_file_path, dataset_id, report)
+            print(f"🔍 Monitoring result: {monitoring_result['verification']['accuracy_percentage']:.1f}% accurate")
+            if not monitoring_result['verification']['is_accurate']:
+                print(f"⚠️ Discrepancies found: {len(monitoring_result['verification']['discrepancies'])}")
+                for disc in monitoring_result['verification']['discrepancies'][:3]:  # Show first 3
+                    print(f"   • {disc}")
+        except Exception as e:
+            print(f"⚠️ Monitoring error: {e}")
         print(f"✅ Upload complete: {file.filename}")
         return jsonify(response_data)
     except MemoryError:
@@ -378,6 +388,11 @@ def create_fast_quality_report(df):
         duplicate_percent = (duplicates / max(1, len(df_sample))) * 100
         numeric_cols = df_sample.select_dtypes(include=[np.number]).columns.tolist()
         categorical_cols = df_sample.select_dtypes(include=['object', 'category']).columns.tolist()
+        total_anomalies = 0
+        for col in numeric_cols:
+            if col in df_sample.columns:
+                outlier_info = outlier_counts(df_sample[col])
+                total_anomalies += outlier_info.get('iqr_count', 0)
         return {
             'quality_score': quality_score,
             'grade': grade,
@@ -387,6 +402,7 @@ def create_fast_quality_report(df):
             'missing_percent': round(missing_percent, 2),
             'duplicates': int(duplicates),
             'duplicate_percent': round(duplicate_percent, 2),
+            'anomalies': int(total_anomalies),
             'numeric_columns': len(numeric_cols),
             'categorical_columns': len(categorical_cols),
             'data_types': {col: str(dtype) for col, dtype in df_sample.dtypes.items()},
@@ -1219,6 +1235,30 @@ def merge_datasets():
         error_response = jsonify({'error': str(e)})
         error_response.headers.add("Access-Control-Allow-Origin", "*")
         return error_response, 500
+@app.route('/api/monitoring/summary')
+def get_monitoring_summary_endpoint():
+    """Get monitoring summary"""
+    try:
+        summary = get_monitoring_summary()
+        return jsonify(summary)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+@app.route('/api/monitoring/report/<dataset_id>')
+def get_monitoring_report_endpoint(dataset_id):
+    """Get detailed monitoring report for a specific dataset"""
+    try:
+        report = get_monitoring_report(dataset_id)
+        return jsonify({"report": report})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+@app.route('/api/monitoring/report')
+def get_overall_monitoring_report():
+    """Get overall monitoring report"""
+    try:
+        report = get_monitoring_report()
+        return jsonify({"report": report})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 if __name__ == "__main__":
     host = os.environ.get("HOST", "0.0.0.0")
     port = int(os.environ.get("PORT", "5000"))

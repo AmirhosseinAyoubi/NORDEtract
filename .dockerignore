@@ -1,0 +1,11 @@
+.git
+__pycache__
+*.pyc
+*.log
+node_modules
+.DS_Store
+Thumbs.db
+datasets/
+reports/
+logs/
+README.md
