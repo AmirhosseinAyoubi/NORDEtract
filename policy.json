@@ -1,0 +1,46 @@
+{
+  "baseline": {
+    "duplicates": {
+      "scale": 0.1,
+      "max_penalty": 3
+    },
+    "constant_columns": {
+      "per_column": 0,
+      "max_penalty": 5
+    },
+    "missing_values": {
+      "scale": 0,
+      "max_penalty": 5
+    },
+    "outliers": {
+      "scale": 0,
+      "max_penalty": 3
+    }
+  },
+  "context": {
+    "DAYS_BIRTH": {
+      "non_negative_penalty": 1,
+      "max_age": 120,
+      "age_penalty": 1
+    },
+    "DAYS_EMPLOYED": {
+      "positive_penalty": 1
+    },
+    "AMT_INCOME_TOTAL": {
+      "max_value": 100000000,
+      "penalty": 2
+    },
+    "TARGET": {
+      "non_binary_penalty": 2
+    },
+    "FLAG_*": {
+      "non_binary_penalty": 1
+    }
+  },
+  "grades": {
+    "A": 85,
+    "B": 70,
+    "C": 55,
+    "D": 40
+  }
+}
